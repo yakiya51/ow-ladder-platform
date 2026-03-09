@@ -5,8 +5,13 @@
     "./packages/*"
   ],
   "scripts": {
-    "server:dev": "npm run dev -w @mpg/server",
-    "client:dev": "npm run dev -w @mpg/client",
-    "client:build": "npm run build -w @mpg/client"
+    "server:dev": "npm run dev -w @ow/server",
+    "db:browse": "npm run db:browse -w @ow/server",
+    "db:push": "npm run db:push -w @ow/server",
+    "db:reset": "npm run db:reset -w @ow/server",
+    "db:remake": "npm run db:remake -w @ow/server",
+    "db:truncate": "npm run db:truncate -w @ow/server",
+    "client:dev": "npm run dev -w @ow/client",
+    "client:build": "npm run build -w @ow/client"
   }
 }

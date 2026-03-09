@@ -1,4 +1,8 @@
-const OW_MAPS = [
+export const OW_TEAM_COLORS = ["RED", "BLUE"] as const;
+
+export const OW_ROLES = ["TANK", "DAMAGE", "SUPPORT"] as const;
+
+export const OW_MAPS = [
   // Control
   "OASIS",
   "ILIOS",
@@ -12,17 +16,21 @@ const OW_MAPS = [
   "DORADO",
   "RIALTO",
   "WATCHPOINT_GIBRALTAR",
+  "ROUTE_66",
+  "CIRCUIT_ROYAL",
+
+  // HYBRID
   "BLIZZARD_WORLD",
   "HOLLYWOOD",
   "KINGS_ROW",
   "NUMBANI",
-  "ROUTE_66",
   "MIDTOWN",
+
+  // PUSH
   "COLOSSEO",
-  "CIRCUIT_ROYAL",
 ] as const;
 
-const OW_HEROES = [
+export const OW_HEROES = [
   // Tanks
   "REINHARDT",
   "SIGMA",
@@ -79,7 +87,3 @@ const OW_HEROES = [
   "BRIGITTE",
   "KIRIKO",
 ] as const;
-
-export { OW_HEROES, OW_MAPS };
-export type OwHero = (typeof OW_HEROES)[number];
-export type OwMap = (typeof OW_MAPS)[number];
