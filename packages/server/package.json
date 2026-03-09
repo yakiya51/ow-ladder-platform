@@ -2,7 +2,7 @@
   "name": "@ow/server",
   "private": true,
   "scripts": {
-    "dev": "npx tsx watch --env-file=.env src/server.ts",
+    "dev": "npx tsx watch --include=./src/**/* --env-file=.env src/server.ts",
     "db:browse": "npx drizzle-kit studio",
     "db:reset": "npm run db:remake && npm run db:push && npm run db:seed",
     "db:remake": "npx tsx ./scripts/remake.ts",
@@ -27,6 +27,7 @@
     "drizzle-orm": "^0.45.1",
     "express": "^5.2.1",
     "mysql2": "^3.19.0",
+    "vitest": "^4.0.18",
     "ws": "^8.19.0",
     "zod": "^4.3.6"
   }

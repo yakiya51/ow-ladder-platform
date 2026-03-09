@@ -1,17 +1,16 @@
 import z from "zod";
-import { os } from "@orpc/server";
-import { protectedRouter } from "../router";
+import { protectedRoute } from "./shared";
 
-export const matchRouter = protectedRouter.router({
-  getMany: protectedRouter
+export const matchRouter = {
+  getMany: protectedRoute
     .route({ method: "GET" })
     .handler(async ({ input, context }) => {
       return { message: "HI" };
     }),
-  getOne: protectedRouter
+  getOne: protectedRoute
     .route({ method: "GET" })
     .input(z.object({ matchId: z.string() }))
     .handler(async ({ input, context }) => {
       return { matchId: input.matchId };
     }),
-});
+};

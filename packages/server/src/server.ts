@@ -1,6 +1,6 @@
 import http from "http";
 import { api } from "./api";
-import { wss } from "./wss";
+import { wss } from "./ws/wss";
 import ENV from "./env";
 
 const server = http.createServer(api);
@@ -21,5 +21,7 @@ server.on("error", (e) => {
 });
 
 server.listen(ENV.PUBLIC_SERVER_PORT, ENV.PUBLIC_SERVER_HOST, () =>
-  console.log(`Server listening on port ${ENV.PUBLIC_SERVER_PORT}`),
+  console.log(
+    `Server started on http://${ENV.PUBLIC_SERVER_HOST}:${ENV.PUBLIC_SERVER_PORT}`,
+  ),
 );
