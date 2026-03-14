@@ -1,15 +1,12 @@
 import { Transaction, db } from "./db";
 
-type ServiceContext = {
+export type ServiceContext = {
   user: { id: string; battleTag: string };
   db: typeof db | Transaction;
 };
 
 export abstract class Service {
-  constructor(
-    protected user: ServiceContext["user"],
-    protected db: ServiceContext["db"],
-  ) {}
+  constructor(protected ctx: ServiceContext) {}
 }
 
 type ServiceClass<T extends Service> = new (ctx: ServiceContext) => T;

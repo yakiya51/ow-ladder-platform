@@ -20,6 +20,7 @@ const UTC_NOW = sql`(UTC_TIMESTAMP())`;
 // Schemas
 export const userTable = mysqlTable("user", {
   id: uuid().primaryKey().notNull(),
+  battleNetAccountId: varchar({ length: 100 }).unique().notNull(),
   battleTag: varchar({ length: 50 }).unique().notNull(),
   createdAt: timestamp().default(UTC_NOW),
 });

@@ -54,8 +54,21 @@ export type MatchResults = {
   }>;
 };
 
-export type Match =
-  | (MatchBase & MatchTeams & MatchDraftPool & { status: "DRAFT" })
-  | (MatchBase & MatchTeams & { status: "MAP_VOTE" })
-  | (MatchBase & MatchTeams & MatchMap & { status: "IN_PROGRESS" })
-  | (MatchBase & MatchTeams & MatchMap & MatchResults & { status: "FINISHED" });
+export type QueueState =
+  | { status: "NOT_IN_QUEUE" }
+  | {
+      status: "IN_QUEUE";
+      playersInQueue: number;
+      estimatedWaitSeconds: number;
+    }
+  | {
+      status: "MATCH_FOUND";
+      matchId: string;
+      acceptDeadline: string;
+    };
+
+export type MatchState =
+  | ({ status: "DRAFT" } & MatchBase & MatchTeams & MatchDraftPool)
+  | ({ status: "MAP_VOTE" } & MatchBase & MatchTeams)
+  | ({ status: "IN_PROGRESS" } & MatchBase & MatchTeams & MatchMap)
+  | ({ status: "FINISHED" } & MatchBase & MatchTeams & MatchMap & MatchResults);

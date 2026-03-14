@@ -1,14 +1,20 @@
 {
   "name": "@ow/server",
   "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "scripts": {
-    "dev": "npx tsx watch --include=./src/**/* --env-file=.env src/server.ts",
+    "dev": "npx tsx watch --include=./src/**/* --env-file=.env src/http-server.ts",
     "db:browse": "npx drizzle-kit studio",
     "db:reset": "npm run db:remake && npm run db:push && npm run db:seed",
-    "db:remake": "npx tsx ./scripts/remake.ts",
-    "db:seed": "npx tsx ./scripts/seed.ts",
-    "db:truncate": "npx tsx ./scripts/truncate.ts",
+    "db:remake": "npx tsx --env-file=.env ./scripts/remake.ts",
+    "db:seed": "npx tsx --env-file=.env ./scripts/seed.ts",
+    "db:truncate": "npx tsx --env-file=.env ./scripts/truncate.ts",
     "db:push": "npx drizzle-kit push"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.31.9",
+    "vitest": "^4.0.18"
   },
   "dependencies": {
     "@orpc/server": "^1.13.6",
@@ -19,16 +25,16 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^25.2.2",
-    "@types/ws": "^8.18.1",
+    "arctic": "^3.7.0",
+    "cookie": "^1.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "date-fns": "^4.1.0",
-    "drizzle-kit": "^0.18.1",
     "drizzle-orm": "^0.45.1",
     "express": "^5.2.1",
     "mysql2": "^3.19.0",
-    "vitest": "^4.0.18",
-    "ws": "^8.19.0",
+    "npm": "^11.11.0",
+    "socket.io": "^4.8.1",
     "zod": "^4.3.6"
   }
 }

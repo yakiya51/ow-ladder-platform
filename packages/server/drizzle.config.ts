@@ -11,4 +11,5 @@ export default defineConfig({
     user: ENV.DB_USERNAME,
     password: ENV.DB_PASSWORD,
   },
+  casing: "snake_case",
 });

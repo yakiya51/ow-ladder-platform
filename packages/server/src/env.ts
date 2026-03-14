@@ -12,6 +12,12 @@ const schema = z.object({
 
   ENABLE_DB_LOGS: z.stringbool(),
   ENABLE_API_LOG: z.stringbool(),
+
+  BNET_CLIENT_ID: z.string().min(1),
+  BNET_CLIENT_SECRET: z.string().min(1),
+  BNET_REDIRECT_URI: z.url(),
+  AUTH_REDIRECT_SUCCESS: z.url(),
+  AUTH_REDIRECT_ERROR: z.url(),
 });
 
 const { error, data: ENV } = schema.safeParse(process.env);

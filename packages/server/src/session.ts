@@ -6,7 +6,7 @@ import { sha256 } from "@oslojs/crypto/sha2";
 import { addDays, isAfter } from "date-fns";
 import { desc, eq } from "drizzle-orm";
 import { db } from "./db";
-import { SessionTable, sessionTable } from "./schema";
+import { sessionTable } from "./schema";
 
 export type SessionContext = {
   userId: string;
@@ -22,15 +22,28 @@ export const Session = {
     const token = encodeBase32LowerCaseNoPadding(bytes);
     return token;
   },
-  create: (token: string, userId: string): SessionTable => {
+  createForUser: async (userId: string): Promise<string> => {
+    const token = Session.generateToken();
+
     const sessionId = encodeHexLowerCase(
       sha256(new TextEncoder().encode(token)),
     );
-    return {
+    await db.insert(sessionTable).values({
       id: sessionId,
       userId,
       expiresAt: addDays(new Date(), 30),
-    };
+    });
+    return token;
+  },
+  deleteById: async (sessionId: string) => {
+    await db.delete(sessionTable).where(eq(sessionTable.id, sessionId));
+  },
+  revokeByToken: async (token: string) => {
+    const sessionId = encodeHexLowerCase(
+      sha256(new TextEncoder().encode(token)),
+    );
+
+    await Session.deleteById(sessionId);
   },
   validate: async (token: string): Promise<SessionContext | null> => {
     const sessionId = encodeHexLowerCase(
@@ -59,7 +72,7 @@ export const Session = {
     const now = new Date();
 
     if (isAfter(now, session.expiresAt)) {
-      await db.delete(sessionTable).where(eq(sessionTable.id, session.id));
+      await Session.deleteById(session.id);
       return null;
     }
 

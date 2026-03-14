@@ -2,10 +2,15 @@ import express from "express";
 import cors from "cors";
 import cookies from "cookie-parser";
 import { orpcHandler } from "./rpc/router";
+import { handleBNetOauthCallback } from "./oauth";
 
+// OAuth callback handler is not part of RPC layer
+// so it is directly handled as a GET endpoint.
+// All RPC procedures are handled at /api/*
 export const api = express()
-  .use(cors())
+  .use(cors({ origin: true, credentials: true }))
   .use(cookies())
+  .get("/api/auth/bnet/callback", handleBNetOauthCallback)
   .use("/api{/*path}", async (req, res, next) => {
     const { matched } = await orpcHandler.handle(req, res, {
       prefix: "/api",

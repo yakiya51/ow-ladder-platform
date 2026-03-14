@@ -21,3 +21,5 @@ export const orpcHandler = new RPCHandler(router, {
     }),
   ],
 });
+
+export type RpcRouter = typeof router;
