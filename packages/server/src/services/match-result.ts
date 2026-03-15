@@ -1,4 +1,4 @@
-import { MatchState } from "@ow/shared";
+import { MatchState } from "@ow/mm";
 
 export class MatchResultService {
   constructor() {}

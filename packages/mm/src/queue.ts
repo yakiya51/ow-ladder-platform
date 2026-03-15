@@ -1,31 +1,32 @@
 import { OwRole } from "@ow/shared";
 
-export type Player = {
-  id: string;
+export type QueuedPlayer = {
+  userId: string;
+  battleTag: string;
   roles: Array<OwRole>;
-  rating: number;
+  mmr: number;
   joinedQueueAt: Date;
 };
 
 export interface MatchQueue {
-  add(entry: { id: string }): { playersInQueue: number };
+  add(entry: Omit<QueuedPlayer, "joinedQueueAt">): { playersInQueue: number };
   remove(entryId: string): void;
-  getAll(): Array<Player>;
-  getByRating(range: { from: number; to: number }): Array<Player>;
+  getAll(): Array<QueuedPlayer>;
+  getByRating(range: { from: number; to: number }): Array<QueuedPlayer>;
 }
 
 // Not expecting many users in queue at this point so we're just using a array.
 // Could use something like a sorted set as an optimization in the future.
 export class SimpleMatchQueue implements MatchQueue {
-  private queue = [] as Array<Player>;
+  private queue = [] as Array<QueuedPlayer>;
 
-  add(entry: Player) {
-    this.queue.push(entry);
+  add(entry: Omit<QueuedPlayer, "joinedQueueAt">) {
+    this.queue.push({ ...entry, joinedQueueAt: new Date() });
     return { playersInQueue: this.queue.length };
   }
 
   remove(entryId: string) {
-    this.queue = this.queue.filter((entry) => entry.id !== entryId);
+    this.queue = this.queue.filter((entry) => entry.userId !== entryId);
   }
 
   getAll() {
@@ -34,7 +35,7 @@ export class SimpleMatchQueue implements MatchQueue {
 
   getByRating(range: { from: number; to: number }) {
     return this.queue.filter(
-      (entry) => entry.rating >= range.from && entry.rating <= range.to,
+      (entry) => entry.mmr >= range.from && entry.mmr <= range.to,
     );
   }
 }

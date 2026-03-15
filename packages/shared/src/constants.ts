@@ -87,3 +87,8 @@ export const OW_HEROES = [
   "BRIGITTE",
   "KIRIKO",
 ] as const;
+
+export type OwRole = (typeof OW_ROLES)[number];
+export type OwTeamColor = (typeof OW_TEAM_COLORS)[number];
+export type OwHero = (typeof OW_HEROES)[number];
+export type OwMap = (typeof OW_MAPS)[number];

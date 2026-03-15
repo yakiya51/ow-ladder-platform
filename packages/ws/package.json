@@ -1,12 +1,12 @@
 {
-  "name": "@ow/mm",
-  "version": "1.0.0",
+  "name": "@ow/ws",
   "private": true,
   "main": "src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@ow/shared": "*"
+    "@ow/shared": "*",
+    "@ow/mm": "*"
   }
 }
