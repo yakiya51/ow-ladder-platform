@@ -2,9 +2,9 @@ import * as arctic from "arctic";
 import ENV from "./env";
 import { eq } from "drizzle-orm";
 import type { RequestHandler } from "express";
-import { db } from "./db";
-import { userTable } from "./schema";
-import { Session } from "./session";
+import { db } from "./db/connection";
+import { userTable } from "./db/schema";
+import { Session } from "./auth/session";
 
 export const BNET_OAUTH_COOKIE_NAME = "BNET_OAUTH_STATE";
 export const BNetOauth = new arctic.BattleNet(
@@ -28,7 +28,6 @@ export const handleBNetOauthCallback: RequestHandler = async (req, res) => {
   const code = req.query.code;
   const storedState = req.cookies[BNET_OAUTH_COOKIE_NAME] as string | undefined;
 
-  console.log({ state, code, storedState });
   res.clearCookie(BNET_OAUTH_COOKIE_NAME, {
     httpOnly: true,
     secure: IS_COOKIE_SECURE,

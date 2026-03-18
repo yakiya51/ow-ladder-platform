@@ -3,9 +3,9 @@ import {
   MatchState,
   MatchSetupState,
   QueueState,
-  ServerToClientMsg,
+  ServerToClientMessage,
   OwRole,
-} from "@ow/shared";
+} from "@ow/core";
 import {
   createContext,
   ReactNode,
@@ -18,12 +18,12 @@ type MatchMakingState = QueueState | MatchSetupState | MatchState;
 
 function reduce(
   currentState: MatchMakingState,
-  msg: ServerToClientMsg,
+  msg: ServerToClientMessage,
 ): MatchMakingState {
   const transition = stateTransitions[currentState.status][msg.kind] as
     | ((
         state: MatchMakingState,
-        message: ServerToClientMsg,
+        message: ServerToClientMessage,
       ) => MatchMakingState)
     | undefined;
 
@@ -32,9 +32,9 @@ function reduce(
 
 const stateTransitions: {
   [S in MatchMakingState["status"]]: Partial<{
-    [Message in ServerToClientMsg["kind"]]: (
+    [Message in ServerToClientMessage["kind"]]: (
       state: Extract<MatchMakingState, { status: S }>,
-      msg: Extract<ServerToClientMsg, { kind: Message }>,
+      msg: Extract<ServerToClientMessage, { kind: Message }>,
     ) => MatchMakingState;
   }>;
 } = {
@@ -105,7 +105,7 @@ type MatchMakingContextValue = {
   ws: UseWebSocketReturn;
   joinQueue: (role: Array<OwRole>) => void;
   leaveQueue: () => void;
-  dispatch: ActionDispatch<[msg: ServerToClientMsg]>;
+  dispatch: ActionDispatch<[msg: ServerToClientMessage]>;
 };
 
 const MatchMakingContext = createContext<MatchMakingContextValue | null>(null);

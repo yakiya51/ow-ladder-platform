@@ -19,7 +19,7 @@
     "@orpc/server": "^1.13.6",
     "@orpc/tanstack-query": "^1.13.6",
     "@ow/server": "*",
-    "@ow/shared": "*",
+    "@ow/core": "*",
     "@phosphor-icons/react": "^2.1.10",
     "@remixicon/react": "^4.9.0",
     "@tailwindcss/vite": "^4.2.1",

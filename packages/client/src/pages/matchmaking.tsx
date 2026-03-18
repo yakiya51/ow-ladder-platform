@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ReactNode, useState } from "react";
 import { useMatchMakingContext } from "@/features/matchmaking";
-import { OW_ROLES, OwRole } from "@ow/shared";
+import { OW_ROLES, OwRole } from "@ow/core";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export function MatchMakingPage() {

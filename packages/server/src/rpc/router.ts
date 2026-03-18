@@ -1,4 +1,4 @@
-import { matchRouter } from "./match";
+import { matchResultRouter } from "./match-result";
 import { authRouter } from "./auth";
 import { baseRoute } from "./shared";
 import { RPCHandler } from "@orpc/server/node";
@@ -9,7 +9,7 @@ import {
 } from "@orpc/server/plugins";
 
 const router = baseRoute.router({
-  matches: matchRouter,
+  matches: matchResultRouter,
   auth: authRouter,
 });
 

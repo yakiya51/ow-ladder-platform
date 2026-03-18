@@ -1,7 +1,7 @@
 import z from "zod";
 import { protectedRoute } from "./shared";
 
-export const matchRouter = {
+export const matchResultRouter = {
   getMany: protectedRoute
     .route({ method: "GET" })
     .handler(async ({ input, context }) => {

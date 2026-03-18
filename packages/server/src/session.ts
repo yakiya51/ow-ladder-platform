@@ -5,13 +5,14 @@ import {
 import { sha256 } from "@oslojs/crypto/sha2";
 import { addDays, isAfter } from "date-fns";
 import { desc, eq } from "drizzle-orm";
-import { db } from "./db";
-import { sessionTable } from "./schema";
+import { db } from "./db/connection";
+import { sessionTable } from "./db/schema";
 
 export type SessionContext = {
   userId: string;
   sessionId: string;
   battleTag: string;
+  mmr: number;
 };
 
 export const Session = {
@@ -57,6 +58,7 @@ export const Session = {
           columns: {
             id: true,
             battleTag: true,
+            mmr: true,
           },
         },
       },
@@ -80,6 +82,7 @@ export const Session = {
       userId: user.id,
       sessionId: session.id,
       battleTag: user.battleTag,
+      mmr: user.mmr,
     };
   },
 };

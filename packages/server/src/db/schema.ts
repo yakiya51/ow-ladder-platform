@@ -1,4 +1,4 @@
-import { OW_MAPS, OW_TEAM_COLORS } from "@ow/shared";
+import { OW_MAPS, OW_TEAM_COLORS } from "@ow/core";
 import { relations, sql } from "drizzle-orm";
 import {
   mysqlTable,
@@ -22,6 +22,7 @@ export const userTable = mysqlTable("user", {
   id: uuid().primaryKey().notNull(),
   battleNetAccountId: varchar({ length: 100 }).unique().notNull(),
   battleTag: varchar({ length: 50 }).unique().notNull(),
+  mmr: int().default(0).notNull(),
   createdAt: timestamp().default(UTC_NOW),
 });
 
@@ -44,8 +45,6 @@ export const sessionTableRelations = relations(sessionTable, ({ one }) => ({
     references: [userTable.id],
   }),
 }));
-
-export type SessionTable = typeof sessionTable.$inferInsert;
 
 export const playerTable = mysqlTable(
   "player",
@@ -71,6 +70,19 @@ export const playerTableRelations = relations(playerTable, ({ one }) => ({
   }),
 }));
 
+export const matchTable = mysqlTable("match", {
+  id: uuid().primaryKey().notNull(),
+  map: mysqlEnum(OW_MAPS),
+  createdAt: timestamp().default(UTC_NOW),
+  startedAt: timestamp(),
+  endedAt: timestamp(),
+});
+
+export const matchTableRelations = relations(matchTable, ({ many }) => ({
+  results: many(matchResult),
+  players: many(playerTable),
+}));
+
 export const matchResult = mysqlTable(
   "match_result",
   {
@@ -83,16 +95,3 @@ export const matchResult = mysqlTable(
   },
   (table) => [uniqueIndex("match_id_team_color").on(table.matchId, table.team)],
 );
-
-export const matchTable = mysqlTable("match", {
-  id: uuid().primaryKey().notNull(),
-  map: mysqlEnum(OW_MAPS),
-  createdAt: timestamp().default(UTC_NOW),
-  startedAt: timestamp(),
-  endedAt: timestamp(),
-});
-
-export const matchTableRelations = relations(matchTable, ({ one, many }) => ({
-  results: many(matchResult),
-  players: many(playerTable),
-}));

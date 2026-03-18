@@ -1,11 +1,11 @@
 import http from "http";
-import { api } from "./api";
-import { createSocketServer } from "./ws/server";
+import { api } from "./express";
+import { createWebSocketServer } from "./ws/wss";
 import ENV from "./env";
 
 const server = http.createServer(api);
 
-createSocketServer(server);
+createWebSocketServer(server);
 
 server.on("error", (e) => console.log(e));
 

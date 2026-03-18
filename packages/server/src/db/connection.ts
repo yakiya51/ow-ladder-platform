@@ -7,7 +7,7 @@ import mysql from "mysql2/promise";
 import * as schema from "./schema";
 import { MySqlTransaction } from "drizzle-orm/mysql-core";
 import { ExtractTablesWithRelations } from "drizzle-orm";
-import ENV from "./env";
+import ENV from "../env";
 
 const connection = mysql.createPool({
   database: ENV.DB_SCHEMA,

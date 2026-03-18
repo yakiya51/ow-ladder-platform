@@ -1,11 +1,23 @@
 import z from "zod";
-import { OW_MAPS, OW_ROLES, OwMap } from "@ow/shared";
-import { MatchTeam, MatchPlayer } from "@ow/mm";
+import {
+  OW_ROLES,
+  OW_MAPS,
+  OwMap,
+  PlayerDraftable,
+  PlayerDrafted,
+} from "@ow/core";
+
+export type ClientToServerEvents = {
+  message: (msg: ClientToServerMessage) => void;
+};
+
+export type ServerToClientEvents = {
+  message: (msg: ServerToClientMessage) => void;
+};
 
 //
 // Client messages need to be validated at runtime so we are defining each of their zod schemas first
 //
-
 const queueJoin = z.object({
   kind: z.literal("QUEUE_JOIN"),
   payload: z.object({ roles: z.array(z.enum(OW_ROLES)) }),
@@ -33,7 +45,7 @@ const mapVote = z.object({
   payload: z.object({ map: z.enum(OW_MAPS) }),
 });
 
-export const clientToServerMsgValidator = z.discriminatedUnion("kind", [
+export const clientToServerMessageValidator = z.discriminatedUnion("kind", [
   queueJoin,
   queueLeave,
   matchAccept,
@@ -42,56 +54,64 @@ export const clientToServerMsgValidator = z.discriminatedUnion("kind", [
   mapVote,
 ]);
 
-export type ClientToServerMsg = z.infer<typeof clientToServerMsgValidator>;
-
+export type ClientToServerMessage = z.infer<
+  typeof clientToServerMessageValidator
+>;
 //
-// Only validating server to client messages during compile type (only type checking)
+// Only validating server to client messages during compile type
 //
 
-export type Msg<K extends string, P extends object | undefined = undefined> = {
+export type Message<
+  K extends string,
+  P extends object | undefined = undefined,
+> = {
   kind: K;
 } & (P extends undefined ? {} : { payload: P });
 
-type QueueJoined = Msg<"QUEUE_JOINED", { playersInQueue: number }>;
+type QueueJoined = Message<"QUEUE_JOINED", { queuedPlayersCount: number }>;
 
-type QueueUpdated = Msg<"QUEUE_UPDATED", { playersInQueue: number }>;
+type QueueUpdated = Message<"QUEUE_UPDATED", { queuedPlayersCount: number }>;
 
-type QueueLeft = Msg<"QUEUE_LEFT">;
+type QueueLeft = Message<"QUEUE_LEFT">;
 
-type MatchFound = Msg<
+type MatchFound = Message<
   "MATCH_FOUND",
   { matchId: string; acceptDeadline: string }
 >;
 
-type MatchCanceled = Msg<"MATCH_CANCELLED", { matchId: string }>;
+type MatchCanceled = Message<"MATCH_CANCELLED", { matchId: string }>;
 
 // Hero select phase begins
-type DraftStarted = Msg<
+type DraftStarted = Message<
   "DRAFT_STARTED",
   {
     matchId: string;
     pickDeadline: string;
-    teams: Array<MatchTeam>;
-    draftablePlayers: Array<MatchPlayer>;
+    players: Array<PlayerDraftable | PlayerDrafted>;
   }
 >;
 
-type DraftUpdated = Msg<
+type DraftUpdated = Message<
   "DRAFT_UPDATED",
+  { players: Array<PlayerDraftable | PlayerDrafted> }
+>;
+
+type DraftCompleted = Message<
+  "DRAFT_COMPLETED",
   {
-    teams: Array<MatchTeam>;
-    draftablePlayers: Array<MatchPlayer>;
+    players: Array<PlayerDrafted>;
   }
 >;
 
-type DraftCompleted = Msg<"DRAFT_COMPLETED", { teams: Array<MatchTeam> }>;
-
-type MapVoteStarted = Msg<
+type MapVoteStarted = Message<
   "MAP_VOTE_STARTED",
-  { choices: Array<OwMap>; voteDeadline: string }
+  {
+    choices: Array<OwMap>;
+    voteDeadline: string;
+  }
 >;
 
-type MapVoteUpdated = Msg<
+type MapVoteUpdated = Message<
   "MAP_VOTE_UPDATED",
   {
     votes: Array<{
@@ -101,14 +121,14 @@ type MapVoteUpdated = Msg<
   }
 >;
 
-type MapVoteCompleted = Msg<"MAP_VOTE_COMPLETED", { map: OwMap }>;
+type MapVoteCompleted = Message<"MAP_VOTE_COMPLETED", { map: OwMap }>;
 
-type Error = Msg<
+type Error = Message<
   "ERROR",
   { code: "BAD_INPUT" | "UNAUTHORIZED" | "UNHANDLED"; message: string }
 >;
 
-export type ServerToClientMsg =
+export type ServerToClientMessage =
   | QueueJoined
   | QueueUpdated
   | QueueLeft

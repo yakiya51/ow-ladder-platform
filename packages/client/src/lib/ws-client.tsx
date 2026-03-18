@@ -1,5 +1,5 @@
 import { io, Socket } from "socket.io-client";
-import { ClientToServerMsg, ServerToClientMsg } from "@ow/shared";
+import { ClientToServerMessage, ServerToClientMessage } from "@ow/core";
 import { useEffect, useRef, useState, useCallback } from "react";
 
 type ConnectionStatus = "connected" | "disconnected" | "connecting";
@@ -10,7 +10,7 @@ export interface UseWebSocketReturn {
   status: ConnectionStatus;
   connect: (onSuccess?: () => void) => void;
   disconnect: (onSuccess?: () => void) => void;
-  send: (message: ClientToServerMsg) => void;
+  send: (message: ClientToServerMessage) => void;
 }
 
 export function useWebSocket({
@@ -18,7 +18,7 @@ export function useWebSocket({
   onConnect,
   onDisconnect,
 }: {
-  onMessage: (msg: ServerToClientMsg) => void;
+  onMessage: (msg: ServerToClientMessage) => void;
   onConnect?: () => void;
   onDisconnect?: () => void;
 }): UseWebSocketReturn {
@@ -45,7 +45,7 @@ export function useWebSocket({
       cbRef.current.onMessage(
         (payload !== undefined
           ? { kind, payload }
-          : { kind }) as ServerToClientMsg,
+          : { kind }) as ServerToClientMessage,
       );
     });
     socketRef.current = socket;
@@ -69,7 +69,7 @@ export function useWebSocket({
     setStatus("disconnected");
   }, []);
 
-  const send = useCallback((message: ClientToServerMsg) => {
+  const send = useCallback((message: ClientToServerMessage) => {
     socketRef.current?.emit("message", message);
   }, []);
 
