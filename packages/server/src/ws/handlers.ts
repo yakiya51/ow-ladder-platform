@@ -4,88 +4,75 @@ import {
   ClientToServerEvents,
   ClientToServerMessage,
   ServerToClientEvents,
+  userIdToSocketMap,
 } from "./shared";
-
-type Context = {
-  userId: string;
-  battleTag: string;
-  mmr: number;
-};
+import { ServiceContext } from "../services/shared";
 
 const QUEUE_ROOM_KEY = "queue";
 
-export const wsMessageHandlers: {
-  [K in ClientToServerMessage["kind"]]: (
-    socket: Socket<ClientToServerEvents, ServerToClientEvents>,
-    data: Extract<ClientToServerMessage, { kind: K }>,
-    ctx: Context,
-  ) => void;
-} = {
-  QUEUE_JOIN: async (socket, data, session) => {
-    socket.join(QUEUE_ROOM_KEY);
-    const count = await MatchSetupService.joinQueue(ctx, msg.payload.roles);
+export const handleWsMessage = (props: {
+  socket: Socket<ClientToServerEvents, ServerToClientEvents>;
+  message: ClientToServerMessage;
+  ctx: ServiceContext;
+}): void => {
+  const { socket, message, ctx } = props;
 
-    // Send joined message to the user who joined the queue
-    socket.to(socket.id).emit("message", {
-      kind: "QUEUE_JOINED",
-      payload: { queuedPlayersCount: count },
-    });
+  switch (message.kind) {
+    case "QUEUE_JOIN": {
+      socket.join(QUEUE_ROOM_KEY);
+      const count = MatchSetupService.enqueue(ctx, message.roles);
 
-    // Broadcast updated queue information to all clients
-    // besides the client that joined
-    socket.broadcast.to(QUEUE_ROOM_KEY).emit("message", {
-      kind: "QUEUE_UPDATED",
-      payload: { queuedPlayersCount: count },
-    });
-
-    // TODO(yakiya): set proper MMR range
-    const match = MatchMakerService.makeMatch(-Infinity, Infinity);
-
-    if (!match) return;
-
-    const playerIds = match.players.map((p) => p.userId);
-
-    // Send MATCH_FOUND to all players in the match
-    socket
-      .to("queue")
-      .to(playerIds)
-      .emit("message", {
-        kind: "MATCH_FOUND",
-        payload: {
-          matchId: crypto.randomUUID(),
-          acceptDeadline: new Date().toString(),
-        },
+      socket.emit("message", {
+        kind: "QUEUE_JOINED",
+        queuedPlayersCount: count,
       });
 
-    PendingMatchService.create(match.id, playerIds);
-  },
-  QUEUE_LEAVE: (socket) => {
-    const count = MatchQueueService.leave(ctx);
-
-    socket.broadcast.to(QUEUE_ROOM_KEY).emit("message", {
-      kind: "QUEUE_UPDATED",
-      payload: { queuedPlayersCount: count },
-    });
-
-    socket.disconnect();
-  },
-  MATCH_ACCEPT: (socket) => {
-    const match = PendingMatchService.getMatchByPlayerId(ctx.user.id);
-
-    if (!match) {
-      socket.to(socket.id).emit("message", {
-        kind: "ERROR",
-        payload: {
-          code: "BAD_INPUT",
-          message: "You are not in a pending match.",
-        },
+      socket.broadcast.to(QUEUE_ROOM_KEY).emit("message", {
+        kind: "QUEUE_UPDATED",
+        queuedPlayersCount: count,
       });
-      return;
-    }
 
-    const state = PendingMatchService.accept(match.id, ctx.user.id);
+      const match = MatchSetupService.attemptMatchCreation(0, 5000);
 
-    if (state.status === "ALL_ACCEPTED") {
+      if (!match) return;
+
+      const userIds = match.players.map((p) => p.id);
+
+      for (const userId of userIds) {
+        const socket = userIdToSocketMap.get(userId);
+        if (socket) {
+          socket.leave("queue");
+          socket.join(match.id);
+        }
+      }
+
+      socket.to(match.id).emit("message", { kind: "MATCH_UPDATED", match });
+      break;
     }
-  },
+    case "QUEUE_LEAVE": {
+      const count = MatchSetupService.dequeue(ctx);
+
+      socket.broadcast.to(QUEUE_ROOM_KEY).emit("message", {
+        kind: "QUEUE_UPDATED",
+        queuedPlayersCount: count,
+      });
+
+      socket.disconnect();
+      break;
+    }
+    case "MATCH_ACCEPT": {
+      const match = MatchSetupService.acceptMatch(ctx.user.id);
+      socket.to(match.id).emit("message", { kind: "MATCH_UPDATED", match });
+      break;
+    }
+    case "MATCH_DECLINE": {
+      const match = MatchSetupService.declineMatch(ctx.user.id);
+      socket.to(match.id).emit("message", { kind: "MATCH_UPDATED", match });
+      break;
+    }
+    case "DRAFT_PICK_PLAYER":
+      break;
+    case "MAP_VOTE":
+      break;
+  }
 };

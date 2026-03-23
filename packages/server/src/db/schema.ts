@@ -1,4 +1,4 @@
-import { OW_MAPS, OW_TEAM_COLORS } from "@ow/core";
+import { OW_MAPS, OW_ROLES, OW_TEAM_COLORS } from "@ow/core";
 import { relations, sql } from "drizzle-orm";
 import {
   mysqlTable,
@@ -46,30 +46,6 @@ export const sessionTableRelations = relations(sessionTable, ({ one }) => ({
   }),
 }));
 
-export const playerTable = mysqlTable(
-  "player",
-  {
-    userId: uuid()
-      .notNull()
-      .references(() => userTable.id),
-    matchId: uuid()
-      .notNull()
-      .references(() => matchTable.id),
-    team: mysqlEnum(OW_TEAM_COLORS),
-    isCaptain: boolean().default(false),
-  },
-  (table) => [
-    uniqueIndex("user_id_match_id_idx").on(table.userId, table.matchId),
-  ],
-);
-
-export const playerTableRelations = relations(playerTable, ({ one }) => ({
-  user: one(userTable, {
-    fields: [playerTable.userId],
-    references: [userTable.id],
-  }),
-}));
-
 export const matchTable = mysqlTable("match", {
   id: uuid().primaryKey().notNull(),
   map: mysqlEnum(OW_MAPS),
@@ -95,3 +71,28 @@ export const matchResult = mysqlTable(
   },
   (table) => [uniqueIndex("match_id_team_color").on(table.matchId, table.team)],
 );
+
+export const playerTable = mysqlTable(
+  "player",
+  {
+    userId: uuid()
+      .notNull()
+      .references(() => userTable.id),
+    matchId: uuid()
+      .notNull()
+      .references(() => matchTable.id),
+    assignedRole: mysqlEnum(OW_ROLES),
+    team: mysqlEnum(OW_TEAM_COLORS),
+    isCaptain: boolean().default(false),
+  },
+  (table) => [
+    uniqueIndex("user_id_match_id_idx").on(table.userId, table.matchId),
+  ],
+);
+
+export const playerTableRelations = relations(playerTable, ({ one }) => ({
+  user: one(userTable, {
+    fields: [playerTable.userId],
+    references: [userTable.id],
+  }),
+}));

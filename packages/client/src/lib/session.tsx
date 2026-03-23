@@ -1,11 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-  createContext,
-  PropsWithChildren,
-  ReactNode,
-  useContext,
-  useEffect,
-} from "react";
+import { createContext, PropsWithChildren, useContext, useEffect } from "react";
 import { useLocation } from "wouter";
 import { rpc } from "@/lib/rpc-client";
 

@@ -1,5 +1,4 @@
 import { PropsWithChildren } from "react";
-import { useSession } from "./lib/session";
 import { Link, useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { rpc } from "./lib/rpc-client";
@@ -8,7 +7,7 @@ import { Button } from "./components/ui/button";
 
 export function AppLayout({ children }: PropsWithChildren) {
   const [_, setLocation] = useLocation();
-  const session = useSession();
+  // const session = useSession();
 
   const logoutMutation = useMutation(rpc.auth.logout.mutationOptions());
 
@@ -22,17 +21,18 @@ export function AppLayout({ children }: PropsWithChildren) {
 
   return (
     <>
-      <nav className="flex justify-between p-4 items-center">
-        <div className="mr-auto space-x-4 font-medium text-sm">
-          <Link href="/home">Home</Link>
-          <Link href="/matchmaking">Match Making</Link>
+      <nav className="flex justify-between p-4 items-center border-b container max-w-6xl mx-auto">
+        <div className="mr-auto flex gap-x-8 font-medium text-sm">
+          <Link href="/">
+            <h1 className="font-semibold">Rat Race</h1>
+          </Link>
+          <div className="flex gap-x-4">
+            <Link href="/play">Play</Link>
+          </div>
         </div>
-        <p>{session.battleTag}</p>
-        <Button variant={"destructive"} onClick={handleLogout}>
-          Logout
-        </Button>
+        <Button variant="ghost">Yuta#1234</Button>
       </nav>
-      <div className="px-4">{children}</div>
+      <div className="container mx-auto max-w-6xl px-4 py-10">{children}</div>
     </>
   );
 }

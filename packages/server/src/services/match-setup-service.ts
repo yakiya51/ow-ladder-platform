@@ -1,108 +1,116 @@
-import { KV } from "@ow/kv";
-import { OW_ROLES, OwRole } from "@ow/core";
-import { eq } from "drizzle-orm";
-import { userTable } from "../db/schema";
+import {
+  MatchCanceled,
+  MatchDraft,
+  MatchMaker,
+  MatchPending,
+  OwRole,
+} from "@ow/core";
 import { ServiceContext } from "./shared";
-import { MatchState } from "../features/matchmaker";
+import { KV } from "../db/kv";
+import { MatchQueue } from "@ow/core/src/matchqueue";
 
-type PendingMatch = {
-  id: string;
-  playerIds: Array<string>;
-  acceptedPlayerIds: Array<string>;
-};
-
-type QueuedPlayer = {
-  userId: string;
-  battleTag: string;
-  mmr: number;
-  roles: Array<OwRole>;
-  joinedAt: number;
-};
-
-const matchQueue = new KV<QueuedPlayer>();
-const pendingMatches = new KV<PendingMatch>();
+const pendingMatches = new KV<MatchPending>();
 const playerIdToMatchId = new KV<string>();
+const matchmaker = new MatchMaker(new MatchQueue(), 6);
 
 export class MatchSetupService {
-  static async joinQueue(ctx: ServiceContext, roles: Array<OwRole>) {
-    const { db, user } = ctx;
-
-    const player = await db.query.userTable.findFirst({
-      where: eq(userTable.id, user.id),
+  static enqueue(ctx: ServiceContext, preferredRoles: Array<OwRole>) {
+    matchmaker.enqueue({
+      id: ctx.user.id,
+      battleTag: ctx.user.battleTag,
+      mmr: ctx.user.mmr,
+      preferredRoles,
     });
 
-    if (!player) {
-      throw new Error("session user does not exist in user table.");
-    }
+    return matchmaker.queueSize;
+  }
 
-    matchQueue.set(player.id, {
-      userId: player.id,
-      battleTag: player.battleTag,
-      mmr: player.mmr,
-      roles: roles,
-      joinedAt: Date.now(),
+  static dequeue(ctx: ServiceContext) {
+    matchmaker.dequeue(ctx.user.id);
+    return matchmaker.queueSize;
+  }
+
+  static attemptMatchCreation(
+    mmrFrom: number,
+    mmrTo: number,
+  ): MatchPending | null {
+    const draftpool = matchmaker.extractMatchPlayers({
+      from: mmrFrom,
+      to: mmrTo,
     });
 
-    return matchQueue.size();
-  }
+    if (!draftpool) return null;
 
-  static leaveQueue(ctx: ServiceContext) {
-    matchQueue.delete(ctx.user.id);
-    return matchQueue.size();
-  }
-
-  static createPendingMatch(matchId: string, playerIds: Array<string>) {
-    // 1. store pre-match info in in-memory database
-    // 2. keep applying events onto the state.
-    // 3. once actual match is created, store into persistent database
-
-    pendingMatches.set(matchId, {
+    const matchId = crypto.randomUUID();
+    const playerIds = draftpool.map((p) => p.id);
+    const match: MatchPending = {
       id: matchId,
-      playerIds: playerIds,
+      state: "PENDING",
+      acceptDeadline: Date.now() + 20 * 1000,
       acceptedPlayerIds: [],
-    });
+      players: draftpool,
+    };
 
     for (const playerId of playerIds) {
       if (playerIdToMatchId.has(playerId)) {
         throw new Error("Player is already in a pending match.");
       }
-      playerIdToMatchId.set(playerId, matchId);
     }
+
+    // Store pending match into KV store
+    const expiration = 30;
+    pendingMatches.set(matchId, match, expiration);
+
+    for (const playerId of playerIds) {
+      playerIdToMatchId.set(playerId, matchId, expiration);
+    }
+
+    return match;
   }
 
   // We don't want the user to specify the matchId for security purposes
-  static acceptMatch(matchId: string, playerId: string) {
-    const match = pendingMatches.get(matchId);
+  static acceptMatch(playerId: string): MatchDraft | MatchPending {
+    const matchId = playerIdToMatchId.get(playerId);
+    const match = pendingMatches.get(matchId ?? "");
 
-    if (!match || !match.playerIds.includes(playerId)) {
+    if (!match || !match.players.map((p) => p.id).includes(playerId)) {
       throw new Error("player is not part of this pending match.");
     }
 
     match.acceptedPlayerIds.push(playerId);
 
-    if (match.acceptedPlayerIds.length === match.playerIds.length) {
-      pendingMatches.delete(matchId);
-      return { status: "ALL_ACCEPTED" };
+    if (match.acceptedPlayerIds.length === match.players.length) {
+      pendingMatches.delete(match.id);
+      return {
+        id: match.id,
+        players: match.players,
+        state: "DRAFTING",
+        draftDeadline: Date.now() + 30 * 1000,
+        draftTurn: "BLUE",
+      };
+    } else {
+      return match;
     }
-
-    return {
-      status: "SOME_ACCEPTED",
-      acceptedPlayerIds: match.acceptedPlayerIds,
-    };
   }
 
-  static declineMatch(playerId: string) {
+  static declineMatch(playerId: string): MatchCanceled {
     const matchId = playerIdToMatchId.get(playerId);
+    const match = pendingMatches.get(matchId ?? "");
 
-    if (!matchId) {
-      return false;
+    if (
+      !matchId ||
+      !match ||
+      !match.players.map((p) => p.id).includes(playerId)
+    ) {
+      throw new Error("player is not part of any pending matches.");
     }
-    const match = pendingMatches.get(matchId);
 
-    if (!match || !match.playerIds.includes(playerId)) {
-      return false;
-    }
+    pendingMatches.delete(matchId);
 
-    return pendingMatches.delete(matchId);
+    return {
+      id: match.id,
+      state: "CANCELED",
+      reason: "DECLINED",
+    };
   }
 }

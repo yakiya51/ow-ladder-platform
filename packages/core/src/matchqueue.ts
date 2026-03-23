@@ -5,11 +5,11 @@ export class MatchQueue {
 
   constructor() {}
 
-  add(player: PlayerInQueue) {
+  add(player: Omit<PlayerInQueue, "joinedQueueAt">) {
     if (this.queue.find((p) => p.id === player.id)) {
       throw new Error("player is already in queue");
     }
-    this.queue.push(player);
+    this.queue.push({ ...player, joinedQueueAt: Date.now() });
     return this.queue.length;
   }
 
@@ -20,5 +20,9 @@ export class MatchQueue {
 
   getByRating(mmrFrom: number, mmrTo: number) {
     return this.queue.filter((p) => p.mmr >= mmrFrom && p.mmr <= mmrTo);
+  }
+
+  get size() {
+    return this.queue.length;
   }
 }

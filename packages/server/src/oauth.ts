@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import type { RequestHandler } from "express";
 import { db } from "./db/connection";
 import { userTable } from "./db/schema";
-import { Session } from "./auth/session";
+import { Session } from "./session";
 
 export const BNET_OAUTH_COOKIE_NAME = "BNET_OAUTH_STATE";
 export const BNetOauth = new arctic.BattleNet(

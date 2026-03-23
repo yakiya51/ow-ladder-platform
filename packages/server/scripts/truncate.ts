@@ -4,7 +4,7 @@ import mysql from "mysql2/promise";
 import ENV from "../src/env";
 
 // delete all rows from all tables
-export async function truncateDb() {
+export async function main() {
   const connection = await mysql.createConnection({
     host: ENV.DB_HOST,
     user: ENV.DB_USERNAME,
@@ -43,7 +43,7 @@ export async function truncateDb() {
   connection.destroy();
 }
 
-truncateDb()
+main()
   .then(() => {
     console.log("truncated tables");
     process.exit(0);

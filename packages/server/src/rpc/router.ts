@@ -13,7 +13,7 @@ const router = baseRoute.router({
   auth: authRouter,
 });
 
-export const orpcHandler = new RPCHandler(router, {
+export const rpcHandler = new RPCHandler(router, {
   plugins: [new RequestHeadersPlugin(), new ResponseHeadersPlugin()],
   interceptors: [
     onError((error) => {

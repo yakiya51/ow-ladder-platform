@@ -13,6 +13,7 @@
     "db:push": "npx drizzle-kit push"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.3.0",
     "drizzle-kit": "^0.31.9",
     "vitest": "^4.0.18"
   },
@@ -21,7 +22,6 @@
     "@oslojs/crypto": "^1.0.1",
     "@oslojs/encoding": "^1.1.0",
     "@ow/core": "*",
-    "@ow/kv": "*",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

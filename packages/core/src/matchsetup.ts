@@ -142,29 +142,27 @@ export function appleEventToMatch(
         return { ok: false, error: "INVALID_EVENT" };
       }
     }
-    case "MAP_VOTE":
-      {
-        if (event.kind === "MAP_VOTED") {
-          if (!match.mapPool.includes(event.map)) {
-            return { ok: false, error: "INVALID_MAP" };
-          }
-
-          return {
-            ok: true,
-            match: {
-              id: match.id,
-              state: "MAP_VOTE",
-              mapPool: match.mapPool,
-              players: match.players,
-              votes: { ...match.votes, [event.playerId]: event.map },
-              voteDeadline: match.voteDeadline,
-            },
-          };
-        } else {
-          return { ok: false, error: "INVALID_EVENT" };
+    case "MAP_VOTE": {
+      if (event.kind === "MAP_VOTED") {
+        if (!match.mapPool.includes(event.map)) {
+          return { ok: false, error: "INVALID_MAP" };
         }
+
+        return {
+          ok: true,
+          match: {
+            id: match.id,
+            state: "MAP_VOTE",
+            mapPool: match.mapPool,
+            players: match.players,
+            votes: { ...match.votes, [event.playerId]: event.map },
+            voteDeadline: match.voteDeadline,
+          },
+        };
+      } else {
+        return { ok: false, error: "INVALID_EVENT" };
       }
-      break;
+    }
     case "CANCELED":
     case "IN_PROGRESS":
     case "COMPLETED":

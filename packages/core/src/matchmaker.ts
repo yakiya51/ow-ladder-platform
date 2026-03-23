@@ -8,7 +8,11 @@ export class MatchMaker {
     private teamSize: number,
   ) {}
 
-  enqueue(player: PlayerInQueue) {
+  get queueSize() {
+    return this.queue.size;
+  }
+
+  enqueue(player: Omit<PlayerInQueue, "joinedQueueAt">) {
     return this.queue.add(player);
   }
 
@@ -16,7 +20,7 @@ export class MatchMaker {
     return this.queue.remove(playerId);
   }
 
-  makeMatch(ratingRange: {
+  extractMatchPlayers(ratingRange: {
     from: number;
     to: number;
   }): Array<PlayerDraftable> | null {
@@ -39,24 +43,29 @@ export class MatchMaker {
 
     for (const player of playersInQueue) {
       // Fill role based on player's role preference
-      for (const [role, assignedPlayers] of roleAssignments.entries()) {
-        if (assignedPlayers.length < 2 && player.roles.includes(role)) {
-          assignedPlayers.push({ ...player, team: null });
-          break;
+      for (const [role, playersInRole] of roleAssignments.entries()) {
+        if (playersInRole.length < 4 && player.preferredRoles.includes(role)) {
+          playersInRole.push({ ...player, assignedRole: role, team: null });
         }
       }
 
       // Check if all roles were filled
       let allRolesFilled = true;
       for (const role of OW_ROLES) {
-        if (roleAssignments.get(role)!.length !== 2) {
+        if (roleAssignments.get(role)!.length !== 4) {
           allRolesFilled = false;
           break;
         }
       }
 
       if (allRolesFilled) {
-        return Array.from(roleAssignments.values()).flat();
+        const draftpool = Array.from(roleAssignments.values()).flat();
+
+        for (const player of draftpool) {
+          this.queue.remove(player.id);
+        }
+
+        return draftpool;
       }
     }
 
